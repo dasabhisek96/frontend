@@ -1,43 +1,86 @@
-import React, { useState } from 'react';
-import '../styles/EditTaskModal.css';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
-const EditTaskModal = ({ task, onSave, onCancel }) => {
-  const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description);
 
-  const handleSave = () => {
-    const updatedTask = { ...task, title, description };
-    onSave(updatedTask);
+function EditTaskModal() {
+  const { id } = useParams();  
+  const [task, setTask] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+
+  useEffect(() => {
+    const fetchTask = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(`$(window.location.origin)/api/tasks/${id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch task');
+        }
+
+        const data = await response.json();
+        setTask(data);
+        setLoading(false);
+        
+          
+        
+      } catch (error) {
+        setError(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchTask();
+  }, [id]);
+
+  const handleSave = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`$(window.location.origin)/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(task), // Send updated task details
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
+
+      alert('Task updated successfully');
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
+  if (loading) return <div>Loading task...</div>;
+  if (error) return <div>Error: {error}</div>;
+
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>Edit Task</h2>
-        <div className="form-group">
-          <label htmlFor="task-title">Title</label>
-          <input
-            type="text"
-            id="task-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="task-description">Description</label>
-          <textarea
-            id="task-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-        <div className="modal-actions">
-          <button className="save-button" onClick={handleSave}>Save</button>
-          <button className="cancel-button" onClick={onCancel}>Cancel</button>
-        </div>
-      </div>
+    <div>
+      <h2>Edit Task</h2>
+      <input
+        type="text"
+        value={task.title}
+        onChange={(e) => setTask({ ...task, title: e.target.value })}
+      />
+      <textarea
+        value={task.description}
+        onChange={(e) => setTask({ ...task, description: e.target.value })}
+      />
+      <button onClick={handleSave}>Save</button>
+      <button onClick={handleSave}>Cancel</button>
     </div>
   );
-};
+}
 
 export default EditTaskModal;

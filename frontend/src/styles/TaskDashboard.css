@@ -44,9 +44,9 @@
   }
   
   .add-task-button {
-    background-color: #50168e;
+    background-color: #dfad91;
     color: rgb(142, 39, 39);
-    padding: 10px 15px;
+    padding: 10px;
     border: none;
     border-radius: 30px;
     cursor: pointer;
